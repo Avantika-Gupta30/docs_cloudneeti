@@ -29,7 +29,7 @@ NOTES
         -   Workstation with Python version 3 and above, with multiprocessing and Boto3 modules installed.
         -   User credentials (Access Key Id and Secret Accces Key) of a user having atleast the Security Audit permission and above on the AWS account
 """
-from asyncore import ExitNow
+
 import json
 import boto3
 import argparse
@@ -1239,8 +1239,6 @@ def main(arg):
         quit()
 
     iam = session.client('sts')
-    print(iam)
-    print("Testign iam value")
     account_id = iam.get_caller_identity()["Account"]
     print("Successfully connected to AWS account", account_id)
 
@@ -1375,9 +1373,9 @@ def main(arg):
     workload_count = 0
     try:
         print("Fetching workload mapping")
-        workload_mapping_url = "https://raw.githubusercontent.com/Avantika-Gupta30/docs_cloudneeti/Avantika/resource-count-script-modification/scripts/ZPC-Scripts/workloadMapping.json" 
+        workload_mapping_url = "/C:/Users/Amol Patole/AppData/Local/Programs/Python/workloadMapping.json" 
 
-        with urlopen(workload_mapping_url) as url:
+        with urlopen("file://" + workload_mapping_url) as url:
             workload_mapping = json.loads(url.read())
 
         print("Successfully fetched workload mapping")
@@ -1385,13 +1383,21 @@ def main(arg):
         print("\nWorkload Distribution:")
         for workload in workload_mapping['workloadMapping']['AWS']:
             service_type = workload_mapping['workloadMapping']['AWS'][workload]
+            range_1 = range(1, 5)
             if resource_count_details[service_type] != 0:
-                if service_type != 'AWS::Lambda':
+                if service_type == "AWS::EC2::Instance":
                     workload_count += resource_count_details[service_type]
-                else:
-                    workload_count += [int](resource_count_details[service_type]/5)
-                print("\t{} : {}".format(service_type, resource_count_details[service_type]))
-            
+                elif service_type == "AWS::Lambda::Function":
+                    if resource_count_details[service_type] in range_1:
+                        workload_count = 1
+                    else:   
+                        workload_count += int(resource_count_details[service_type])/5
+                
+                if service_type == "AWS::EC2::Instance":
+                    print("\t{} : {}".format(service_type, resource_count_details[service_type]))
+                if service_type == "AWS::Lambda::Function":
+                    print("\t{} : {}".format(service_type, int(resource_count_details[service_type])/5))
+           
     except:
         print("Error occurred while processing workloads, Please contact cspm support")
 
